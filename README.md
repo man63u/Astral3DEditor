@@ -141,86 +141,210 @@ Astral3DEditorGoBack/      # 后端
 4. 更新 `docs/api/openapi.yaml`。
 
 ---
+# Rocksi × Astral3DEditor  整合教程
 
-### Rocksi 集成流程
+> **目标**：在 *astral3d-editor-with-rocksi* 代码库里，新增「机器人编程」模块（基于 Rocksi），并保持原 Astral3DEditor 功能全 OK。
+>
+> 完成后：侧边栏出现 **机器人编程** 按钮 → 点击进入 Blockly × 三维机械臂页面。
 
-**目标：** 在编辑器内接入批量 3D 模型转换（Rocksi CLI）。
+---
 
-#### 1. 后端
+## 环境要求
 
-```go
-// controllers/rocksi.go
-func (c *RocksiController) Post() {
-    _, h, _ := c.GetFile("file")
-    tmp := filepath.Join(os.TempDir(), h.Filename)
-    c.SaveToFile("file", tmp)
+| 软件           | 版本       | 检查命令            |
+| ------------ | -------- | --------------- |
+| **Node.js**  | ≥ 18 LTS | `node -v`       |
+| **pnpm**（推荐） | ≥ 8      | `pnpm -v`       |
+| **Git**      | ≥ 2.30   | `git --version` |
+| **IDE**      | VS Code  | —               |
 
-    cmd := exec.Command(os.Getenv("ROCKSI_BIN"), "-i", tmp, "-o", tmp+".out", "--draco")
-    if out, err := cmd.CombinedOutput(); err != nil {
-        c.CustomAbort(500, string(out))
-    }
-    c.Data["json"] = map[string]string{"url": "/static/" + h.Filename + ".out"}
-    c.ServeJSON()
-}
+---
+
+## 1 克隆并跑通原仓库
+
+```bash
+# 1‑1 克隆项目
+$ git clone https://github.com/catcatcat23/astral3d-editor-with-rocksi.git
+$ cd astral3d-editor-with-rocksi
+
+# 1‑2 安装依赖（前后端各有 package.json）
+$ pnpm install
+
+# 1‑3 运行前端
+$ cd Astral3DEditor
+$ pnpm dev
+# 打开 http://localhost:5173  验证侧栏正常渲染
 ```
 
-路由注册：
+> *若需后端：*
+>
+> ```bash
+> $ cd ../Astral3DEditorGoBack && bee run
+> ```
 
-```go
-ns.Router("/rocksi/convert", &controllers.RocksiController{}, "post:Post")
+---
+
+## 2 创建整合分支
+
+```bash
+$ cd Astral3DEditor        # 确保位于前端目录
+$ git checkout -b feat/rocksi-integration
 ```
 
-（可选）解析 Rocksi 输出，通过 WebSocket 推送进度。
+---
 
-#### 2. 前端
+## 3 拉取 Rocksi 资源
 
-```vue
-<!-- Toolbar.vue -->
-<button @click="uploadAndConvert" title="Rocksi 转换">
-  <LucideMountain />
-</button>
+```bash
+# 3‑1 临时克隆 Rocksi
+$ cd ../..
+$ git clone https://github.com/ndahn/Rocksi.git rocksi-temp
+
+# 3‑2 复制静态资源
+$ mkdir -p Astral3DEditor/public/rocksi
+$ cp -r rocksi-temp/models rocksi-temp/assets \
+      Astral3DEditor/public/rocksi/
+
+# 3‑3 复制源码
+$ mkdir -p Astral3DEditor/src/rocksi
+$ cp rocksi-temp/js/*.js Astral3DEditor/src/rocksi/
 ```
+
+---
+
+## 4 统一 three.js 版本
+
+```bash
+# 4‑1 删除 Rocksi 自带 CDN 脚本（如存在）
+$ rm Astral3DEditor/src/rocksi/three.min.js 2>/dev/null || true
+
+# 4‑2 锁版本（示例用 r153，若 Astral 已固定其他版本请替换）
+$ cd Astral3DEditor
+$ pnpm add three@0.153.0
+```
+
+在 **所有拷入的 Rocksi JS** 顶部统一：
+
+```js
+import * as THREE from 'three';
+```
+
+---
+
+## 5 模块化 Rocksi
+
+> 将原本的全局 JS 改为可导入模块，并导出初始化函数。
+
+### 5‑1 创建入口 `src/rocksi/init.ts`
 
 ```ts
-// utils/rocksi.ts
-export async function convert(file: File) {
-  const fd = new FormData(); fd.append('file', file);
-  const { data } = await axios.post('/rocksi/convert', fd);
-  return data.url;
+import { createScene } from './core/scene';
+
+export default function initRocksi(el: HTMLElement) {
+  createScene(el);   // 其余逻辑可继续拆分
 }
 ```
 
-进度条可用 NProgress 实现。
+### 5‑2 示范改造 `main.js` → `core/scene.ts`
 
-#### 3. 数据库（可选）
+```ts
+import * as THREE from 'three';
+export function createScene(container: HTMLElement) {
+  const scene = new THREE.Scene();
+  // ... 复制原 main.js 内容，将 document.body → container
+  return { scene };
+}
+```
 
-在 `files` 表插入转换结果元数据。
-
-#### 4. 端到端测试
-
-上传示例 `Salmon.gltf`，期望返回 `200` 与有效 URL。
-
-#### 5. 文档
-
-更新 OpenAPI `/rocksi/convert`，在 README 添加演示 GIF。
-
----
-
-### 发布流程
-
-PR 合并到 `dev` → 验证无误后 PR `dev → main` → GitHub Action 打包镜像推送。
+> 其他文件（`robot_loader.js`, `physics.js`, `runtime.js`, `blockly/*`）按相同思路搬迁。
 
 ---
 
-## 常见问题
+## 6 新增 Vue 页面 & 路由
 
-| 问题                    | 解决方案                                    |
-| --------------------- | --------------------------------------- |
-| `spawn rocksi ENOENT` | 检查 `ROCKSI_BIN` 路径或未安装 Rocksi CLI       |
-| `端口被占用`               | `lsof -i:端口` 查找并终止冲突进程                  |
-| MySQL 报编码错误           | 确认数据库与表均使用 `utf8mb4`                    |
-| WebSocket 连接失败        | 代理(Nginx)需保留 `Upgrade` 与 `Connection` 头 |
+### 6‑1 `src/views/RobotSim.vue`
+
+```vue
+<template><div ref="root" class="h-full w-full"/></template>
+<script setup lang="ts">
+import { ref, onMounted } from 'vue';
+import initRocksi from '@/rocksi/init';
+const root = ref<HTMLDivElement>();
+onMounted(() => initRocksi(root.value!));
+</script>
+```
+
+### 6‑2 `src/router/index.ts`
+
+```ts
+import RobotSim from '@/views/RobotSim.vue';
+routes.push({
+  path: '/robot',
+  name: 'RobotSim',
+  component: RobotSim,
+  meta: { title: '机器人编程' },
+});
+```
+
+### 6‑3 侧边栏菜单（若通过数组生成）
+
+```ts
+menu.push({ icon: 'MdiRobot', name: '机器人编程', path: '/robot' });
+```
 
 ---
 
-*EOF*
+## 7 启动验证（最小可运行）
+
+```bash
+$ pnpm dev
+```
+
+1. 浏览器侧栏出现 **机器人编程** 入口。
+2. 点击后看到 Blockly + 机械臂渲染。
+3. 控制台无 `THREE duplicate` / 404。
+
+---
+
+## 8 接入 Astral 上传接口（URDF）
+
+1. **后端**：在 `LbSysUploadController` 把允许后缀加入 `.urdf`, `.stl`。
+2. **前端**：
+
+```ts
+import { upload } from '@/api/sys';
+const fd = new FormData();
+fd.append('file', urdfFile);
+fd.append('biz', 'robot');
+const { url } = await upload(fd);
+loader.load(url, ...);
+```
+
+---
+
+## 9 （可选）保存 Blockly 程序到数据库
+
+1. 数据库 `lb_3d_editor_scenes` 增列 `programXml TEXT`。
+2. 保存时：
+
+```ts
+import Blockly from 'blockly';
+const xml = Blockly.Xml.domToText(Blockly.Xml.workspaceToDom(workspace));
+await updateScene({ id: sceneId, programXml: xml });
+```
+
+3. 打开场景时 `Blockly.Xml.textToDom` 还原。
+
+---
+
+## 10 常见问题排查
+
+| 症状                                        | 解决                                                   |
+| ----------------------------------------- | ---------------------------------------------------- |
+| `ERR_CONNECTION_REFUSED` on `/api/sys/ws` | WebSocket 地址写死 127.0.0.1；改用 `${location.host}` 或真实域名 |
+| `multiple versions of three.js`           | 仍有 CDN `<script>`；或子依赖引用旧版。用 `npm ls three` 查看并统一    |
+| URDF 模型 404                               | 上传接口没返回 URL / 放错路径；检查 Network 请求                     |
+
+---
+
+完成以上步骤，你就把 **Rocksi** 机器人编程模块无缝并入了 **Astral3DEditor**，并保留未来扩展实时协同、进度推送的空间。祝你集成顺利！
