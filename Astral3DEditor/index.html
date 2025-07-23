@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <link rel="icon" sizes="any" type="image/svg+xml" href="/static/images/logo/logo.svg"/>
+    <link rel="mask-icon" href="/static/images/logo/logo.svg" color="#63E2B7" />
+    <link rel="apple-touch-icon" href="/static/images/logo/pwa/pwa-180x180.png" sizes="180x180" />
+    <meta name="theme-color" content="#63E2B7" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <meta name="author" content="ErSan,mlt131220@163.com">
+    <meta name="copyright" content="ErSan,mlt131220@163.com">
+    <meta name="description" content="一款基于THREE.JS开发的专业的面相浏览器端(webgl/webgpu)的三维可视化编辑器,包含BIM轻量化,CAD解析预览等特色功能">
+    <title>Astral 3D Editor</title>
+</head>
+
+<body>
+<div id="app"></div>
+
+<script type="module" src="/src/main.ts"></script>
+<script>
+    window.URL = window.URL || window.webkitURL;
+    window.BlobBuilder = window.BlobBuilder || window.WebKitBlobBuilder || window.MozBlobBuilder;
+    Number.prototype.format = function () {
+        return this.toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,');
+    };
+
+    /*添加自执行函数，为rem设置自适应的根DOM字体大小，1920px下默认1rem = 20px */
+    (function () {
+        change();
+
+        function change() {
+            const w = document.documentElement.clientWidth > 1280 ? document.documentElement.clientWidth : 1280;
+            document.documentElement.style.fontSize = w * 20 / 1920 + "px";
+        }
+
+        /*监听窗口大小的改变*/
+        window.addEventListener("resize", change, false);
+    })()
+
+    //屏蔽选中
+    document.onselectstart = function (event) {
+        if (window.event) {
+            event = window.event;
+        }
+        try {
+            const the = event.srcElement;
+            return (the.tagName === "INPUT" && the.type.toLowerCase() === "text") || the.tagName === "TEXTAREA";
+        } catch (e) {
+            return false;
+        }
+    }
+
+    // 禁止浏览器默认右键菜单
+    document.addEventListener('contextmenu', (event) => {
+        event.preventDefault();
+    });
+</script>
+</body>
+</html>
