@@ -37,6 +37,9 @@ export default defineConfig(async ({mode, command}) => {
     } else if (mode === "production") {
         dotenv.config({ path: ".env.production" });
     }
+    
+    // 在这里打印端口值
+    console.log('当前使用的 VITE_PORT:', VITE_PORT);
 
     return {
         define: define,
