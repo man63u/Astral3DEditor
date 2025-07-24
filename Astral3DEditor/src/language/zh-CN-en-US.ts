@@ -2,6 +2,7 @@ export default {
 	home:{
 		Project:"项目",
 		'Resource Center':"资源中心",
+		"Card Programming": "卡片式编程",
 		'Setting Center':"设置中心",
 		'Usage Document':"使用文档",
 		'My Project':"我的项目",

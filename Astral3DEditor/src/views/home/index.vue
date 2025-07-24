@@ -10,6 +10,7 @@ import SidebarBottomInfo from "./components/SidebarBottomInfo.vue";
 import Project from "./container/Project.vue";
 import AssetsCenter from "./container/AssetsCenter.vue";
 import SettingCenter from "./container/SettingCenter.vue";
+import CardProgramming from './container/CardProgramming.vue';
 
 const collapsed = ref(false);
 const menuActiveKey = ref<string>("project");
@@ -25,6 +26,12 @@ const menuOptions: MenuOption[] = [
     key: 'assets-center',
     icon: renderIcon(Sprout),
     component:AssetsCenter
+  },
+  {
+    label: () => t("home.Card Programming"),
+    key: 'card-programming',
+    icon: renderIcon(Notebook), // 你可以换一个更合适的图标
+    component: CardProgramming
   },
   {
     label: () => t("home.Setting Center"),
