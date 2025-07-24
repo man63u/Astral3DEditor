@@ -245,7 +245,9 @@ sudo service mysql start
 
 完成数据库配置后，可以启动后端服务。根据你的环境选择合适的启动方式：
 
+
 ```bash
+cd C:\Users\67097\Desktop\新建文件夹\Astral3DEditorGoBack
 bee run      # 如果使用 Beego 框架
 # 或者
 go run main.go    # 如果直接使用 Go
