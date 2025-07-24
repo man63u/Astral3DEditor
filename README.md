@@ -1,4 +1,3 @@
-````markdown
 <p align="center">
   <img src="https://img.shields.io/badge/Vue-3.x-42b883?style=for-the-badge&logo=vue.js" />
   <img src="https://img.shields.io/badge/Vite-5.x-646cff?style=for-the-badge&logo=vite" />
