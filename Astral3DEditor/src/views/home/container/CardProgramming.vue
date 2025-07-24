@@ -1,12 +1,13 @@
 <template>
   <div class="w-full h-full">
     <iframe
-      src="http://localhost:1234"
-      style="width: 100%; height: 100%; border: none"
+      :src="rocksiUrl"
+      class="w-full h-full border-0"
+      ref="rocksiIframe"
     ></iframe>
   </div>
 </template>
 
 <script setup lang="ts">
-// 可选逻辑
+const rocksiUrl = import.meta.env.VITE_ROCKSI_URL || '/rocksi/index.html'
 </script>

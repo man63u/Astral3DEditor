@@ -1,88 +1,86 @@
-import {defineConfig, loadEnv} from 'vite';
-import path from 'path';
-import dotenv from "dotenv";
+import { defineConfig, loadEnv } from 'vite'
+import path from 'path'
+import { wrapperEnv, createPlugins } from './build'
 
-import {wrapperEnv, createPlugins} from "./build";
+export default defineConfig(async ({ mode, command }) => {
+  const root = process.cwd()
+  const env = loadEnv(mode, root)
+  const viteEnv = wrapperEnv(env)
 
-export default defineConfig(async ({mode, command}) => {
-    const root = process.cwd();
-    const env = loadEnv(mode, root);
-    //LoadEnv读取的布尔类型是一个字符串。此函数可以转换为布尔类型
-    const viteEnv = wrapperEnv(env);
-    const {
-        VITE_PORT,
-        VITE_PUBLIC_PATH,
-        VITE_BUILD_COMPRESS,
-        VITE_BUILD_COMPRESS_DELETE_ORIGIN_FILE,
-        VITE_ENABLE_ANALYZE
-    } = viteEnv;
+  const {
+    VITE_PORT,
+    VITE_PUBLIC_PATH,
+    VITE_BUILD_COMPRESS,
+    VITE_BUILD_COMPRESS_DELETE_ORIGIN_FILE,
+    VITE_ENABLE_ANALYZE,
+    VITE_PROXY_URL,
+    VITE_API_PREFIX = '/api'
+  } = viteEnv
 
-    const isBuild = command === 'build';
-    const plugins = await createPlugins({
-        isBuild,
-        root,
-        compress: {
-            compress: VITE_BUILD_COMPRESS,
-            deleteOriginFile: VITE_BUILD_COMPRESS_DELETE_ORIGIN_FILE,
+  const isBuild = command === 'build'
+  const plugins = await createPlugins({
+    isBuild,
+    root,
+    compress: {
+      compress: VITE_BUILD_COMPRESS,
+      deleteOriginFile: VITE_BUILD_COMPRESS_DELETE_ORIGIN_FILE
+    },
+    enableAnalyze: VITE_ENABLE_ANALYZE
+  })
+
+  // 打印端口看一下
+  console.log('当前使用的 VITE_PORT:', VITE_PORT)
+
+  return {
+    base: VITE_PUBLIC_PATH,
+    root,
+    plugins,
+    define: {
+      // 一般不需要把整个 process.env 注入，慎用；若某些第三方库需要可保留
+      'process.env': process.env
+    },
+    resolve: {
+      alias: {
+        '~': path.resolve(__dirname, './types'),
+        '@': path.resolve(__dirname, './src')
+      },
+      extensions: ['.mjs', '.js', '.ts', '.jsx', '.tsx', '.json', '.vue']
+    },
+    optimizeDeps: {
+      exclude: ['keyframe-resample', 'draco3dgltf']
+    },
+    server: {
+      host: true,
+      port: Number(VITE_PORT),
+      headers: {
+        'Cross-Origin-Embedder-Policy': 'unsafe-none',
+        'Cross-Origin-Opener-Policy': 'unsafe-none'
+      },
+      // dev 阶段用代理就行，不需要在 vite 开 CORS
+      cors: false,
+      proxy: {
+        // 1) API 代理
+        [VITE_API_PREFIX]: {
+          target: VITE_PROXY_URL, // http://127.0.0.1:8080
+          changeOrigin: true,
+          ws: true
+          // 不需要 rewrite，后端就是 /api 开头
         },
-        enableAnalyze: VITE_ENABLE_ANALYZE,
-    });
 
-    const define:any = {
-        "process.env": process.env
-    };
-    if (mode === "development") {
-        dotenv.config({ path: ".env.development" });
-        define.global = {};
-    } else if (mode === "production") {
-        dotenv.config({ path: ".env.production" });
-    }
-    
-    // 在这里打印端口值
-    console.log('当前使用的 VITE_PORT:', VITE_PORT);
+        // 2) Rocksi 静态页
+        '/rocksi': {
+          target: VITE_PROXY_URL,
+          changeOrigin: true
+        },
 
-    return {
-        define: define,
-        base: VITE_PUBLIC_PATH,
-        root,
-        plugins,
-        resolve: {
-            alias: {
-                // 设置路径
-                '~': path.resolve(__dirname, './types'),
-                // 设置别名
-                '@': path.resolve(__dirname, './src'),
-            },
-            extensions: ['.mjs', '.js', '.ts', '.jsx', '.tsx', '.json', '.vue']
-        },
-        optimizeDeps: {
-            exclude: ['keyframe-resample','draco3dgltf'],
-        },
-        server: {
-            host: true,
-            port: VITE_PORT,
-            //设置 server.hmr.overlay 为 false 可以禁用开发服务器错误的屏蔽
-            // hmr: { overlay: false },
-            headers: {
-                'Cross-Origin-Embedder-Policy': 'unsafe-none"',
-                'Cross-Origin-Opener-Policy': 'unsafe-none',
-            },
-            cors: {
-                origin: "*", 
-                credentials: true
-            },
-            proxy: {
-                '^/api': {
-                    target: env.VITE_PROXY_URL,
-                    changeOrigin: true,
-                    rewrite: (path) => path.replace(new RegExp(`^/api`), '/api')
-                },
-                "^/file/static": {
-                    target: env.VITE_PROXY_URL,
-                    changeOrigin: true,
-                    rewrite: (path) => path.replace(new RegExp(`^/file/static`), '/api/common/static')
-                },
-            }
+        // 3) 如果有文件静态目录
+        '/file/static': {
+          target: VITE_PROXY_URL,
+          changeOrigin: true
+          // 后端真实路径是 /api/common/static，就保留 rewrite
+          // rewrite: p => p.replace(/^\/file\/static/, '/api/common/static')
         }
+      }
     }
+  }
 })

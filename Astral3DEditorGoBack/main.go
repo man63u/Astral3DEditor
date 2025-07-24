@@ -3,6 +3,9 @@ package main
 import (
 	_ "es-3d-editor-go-back/routers"
 	"es-3d-editor-go-back/utils"
+
+	"path/filepath"
+
 	"github.com/beego/beego/v2/adapter/logs"
 	"github.com/beego/beego/v2/client/orm"
 	beego "github.com/beego/beego/v2/server/web"
@@ -27,6 +30,17 @@ func init() {
 }
 
 func main() {
+	dist := "C:/Users/67097/Desktop/新建文件夹/Rocksi-master/dist/build" // 改成你的绝对路径
+
+	// 主目录
+	beego.BConfig.WebConfig.StaticDir["/rocksi"] = dist
+	// 额外把代码里用到的绝对路径也映射一下
+	beego.BConfig.WebConfig.StaticDir["/models"] = filepath.Join(dist, "models")
+	beego.BConfig.WebConfig.StaticDir["/i18n"] = filepath.Join(dist, "i18n")
+	beego.BConfig.WebConfig.StaticDir["/images"] = filepath.Join(dist, "images")
+
+	// 老接口也可以：beego.SetStaticPath("/rocksi", rocksiAbsPath)
+	// ====== 以上新增 ======
 	if beego.BConfig.RunMode == "dev" {
 		beego.BConfig.WebConfig.DirectoryIndex = true
 		beego.BConfig.WebConfig.StaticDir["/swagger"] = "swagger"

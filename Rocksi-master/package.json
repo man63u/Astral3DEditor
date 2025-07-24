@@ -4,9 +4,9 @@
   "description": "Roboter Simulator für Webseiten",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "parcel serve ./index.html --out-dir dist/dev/",
-    "build-moodle": "cross-env-shell PUBLIC_URL=\"/rocksi\" parcel ./index.html --out-dir dist/build/ --public-url $PUBLIC_URL",
-    "build": "parcel ./index.html --out-dir dist/build/"
+    "dev": "parcel ./index.html --out-dir dist/dev/",
+    "build-moodle": "cross-env PUBLIC_URL=/rocksi parcel build ./index.html --out-dir dist/build/ --public-url $PUBLIC_URL",
+    "build": "parcel build ./index.html --out-dir dist/build/ --public-url ./"
   },
   "author": "Nikolas Dahn",
   "license": "ISC",
@@ -22,7 +22,6 @@
     "js-interpreter": "^2.2.0",
     "lozad": "^1.16.0",
     "objects": "^0.3.0",
-    "parcel-bundler": "^1.12.4",
     "path": "^0.12.7",
     "split.js": "^1.6.2",
     "temp-dir": "^2.0.0",
@@ -40,8 +39,7 @@
     "@types/three": "^0.128.0",
     "cross-env": "^7.0.3",
     "cssnano": "^4.1.10",
-    "parcel-bundler": "^1.12.5",
-    "parcel-plugin-data-src": "github:bkeepers/parcel-plugin-data-src#data-src-anywhere",
+    "parcel-bundler": "1.12.5",
     "parcel-plugin-raw-xml": "^1.0.1",
     "parcel-plugin-static-files-copy": "^2.5.0"
   },
