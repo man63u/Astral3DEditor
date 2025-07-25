@@ -147,143 +147,158 @@ npm run dev
 
 ## 5. 详细启动步骤
 
-### 5.1 克隆代码
+好的！以下是你这个项目（前后端集成了 Rocksi iframe 页面）的**完整运行示范说明（README 模板）**，你可以直接复制保存为 `README.md` 上传到你的仓库中，也可以调整内容适配中文或英文双语。
+
+---
+
+# 🧩 Astral3D Editor with Rocksi
+
+这是一个集成了 [Rocksi](https://github.com/whatisgravity/Rocksi) 前端静态页面的 3D 编辑器平台，基于：
+
+* 前端：Vite + Vue3 + TypeScript
+* 后端：Go + Beego
+* 特性：iframe 加载 Rocksi 页面，支持 WebSocket、API 代理、统一端口映射
+
+---
+
+## 🚀 快速启动（开发环境）
+
+### 1. 克隆项目
 
 ```bash
-git clone https://github.com/<your-name>/astral3d-editor-with-rocksi.git
+git clone https://github.com/catcatcat23/astral3d-editor-with-rocksi.git
 cd astral3d-editor-with-rocksi
 ```
 
-### 5.2 初始化数据库
+---
 
-登录 MySQL：
+### 2. 配置前端环境变量
 
-```bash
-mysql -uroot -p
-```
-
-执行 SQL（可根据需要修改用户名/密码）：
-
-```sql
-CREATE DATABASE astral3d DEFAULT CHARSET utf8mb4 COLLATE utf8mb4_general_ci;
-CREATE USER 'astral'@'localhost' IDENTIFIED BY 'Astral@2025!';
-GRANT ALL PRIVILEGES ON astral3d.* TO 'astral'@'localhost';
-FLUSH PRIVILEGES;
-```
-
-导入表结构：
+复制一份 `.env` 文件（或使用默认配置）：
 
 ```bash
-mysql -uastral -pAstral@2025! astral3d < static/sql/astral-3d-editor.sql
+cp Astral3DEditor/.env.example Astral3DEditor/.env
 ```
 
-### 5.3 配置后端
-
-编辑 `Astral3DEditorGoBack/conf/app.conf` 中的数据库连接：
-
-```ini
-[sql]
-conn = astral:Astral@2025!@tcp(127.0.0.1:3306)/astral3d?charset=utf8mb4&parseTime=true&loc=Local
-```
-
-若后端需要托管 Rocksi 静态资源，请在 `main.go` 中添加静态目录映射（示例）：
-
-```go
-dist := "C:/path/to/Rocksi-master/dist/build"  // 请改成实际绝对路径
-beego.BConfig.WebConfig.StaticDir["/rocksi"] = dist
-beego.BConfig.WebConfig.StaticDir["/models"] = filepath.Join(dist, "models")
-beego.BConfig.WebConfig.StaticDir["/i18n"]   = filepath.Join(dist, "i18n")
-beego.BConfig.WebConfig.StaticDir["/images"] = filepath.Join(dist, "images")
-```
-
-### 5.4 启动后端
-
-```bash
-cd Astral3DEditorGoBack
-bee run
-```
-
-成功标志：
-
-```
-http server Running on http://:8080
-```
-
-访问测试：
-
-* `http://127.0.0.1:8080/api/editor3d/scenes/getAll` 应返回 JSON
-* `http://127.0.0.1:8080/rocksi/index.html` 可直接打开 Rocksi
-
-### 5.5 配置前端环境变量
-
-在 `Astral3DEditor/.env.development` 写入：
+默认 `.env` 配置如下（使用相对路径，避免跨域）：
 
 ```env
 VITE_PORT=3000
-VITE_PUBLIC_PATH=/
-
-VITE_PROXY_URL=http://127.0.0.1:8080
+VITE_PROXY_URL=http://localhost:8080
 VITE_API_PREFIX=/api
-
-# 推荐用绝对地址（避免 /models 路径 404 或返回 HTML）
-VITE_ROCKSI_URL=http://127.0.0.1:8080/rocksi/index.html
-
-VITE_GLOB_SOCKET_URL=ws://127.0.0.1:8080/api/sys/ws
-```
-
-> 注意：dotenv 中 `=` 两边不要有空格。
-
-### 5.6 启动前端
-
-```bash
-cd Astral3DEditor
-npm install --legacy-peer-deps
-npm run dev
-```
-
-成功标志：
-
-```
-VITE v5.x  ready in xxx ms
-➜  Local:   http://localhost:3000/
-```
-
-### 5.7 集成 Rocksi（两种方式）
-
-#### ✅ 方式 A（推荐）：iframe 直连后端静态目录
-
-`.env.development` 中 `VITE_ROCKSI_URL` 用完整绝对 URL（带 8080）。
-
-组件示例：
-
-```vue
-<iframe
-  :src="import.meta.env.VITE_ROCKSI_URL"
-  class="w-full h-full border-0"
-/>
-```
-
-#### 方式 B：通过 Vite 代理将 `/rocksi`、`/models` 等转发到 8080
-
-在 `vite.config.ts`：
-
-```ts
-proxy: {
-  [env.VITE_API_PREFIX]: { target: env.VITE_PROXY_URL, changeOrigin: true, ws: true },
-  '/rocksi': { target: env.VITE_PROXY_URL, changeOrigin: true },
-  '/models': { target: env.VITE_PROXY_URL, changeOrigin: true },
-  '/i18n':   { target: env.VITE_PROXY_URL, changeOrigin: true },
-  '/images': { target: env.VITE_PROXY_URL, changeOrigin: true }
-}
-```
-
-`.env.development` 中可写相对路径：
-
-```env
 VITE_ROCKSI_URL=/rocksi/index.html
+VITE_GLOB_SOCKET_URL=ws://localhost:8080/api/sys/ws
 ```
 
 ---
+
+### 3. 安装并启动前端项目
+
+```bash
+cd Astral3DEditor
+npm install
+npm run dev
+```
+
+你将看到：
+
+```
+➜  Local:   http://localhost:3000/
+```
+
+---
+
+### 4. 启动后端（Beego）
+
+确保你已安装 Go 环境，并且配置好了数据库连接（`app.conf` 中配置 `sql::conn`）：
+
+```bash
+cd Astral3DEditorGoBack
+go run main.go
+```
+
+你将看到：
+
+```
+Listening on :8080
+```
+
+---
+
+### 5. 构建 Rocksi 页面并接入（首次必须做）
+
+> 该步骤只需做一次，之后可跳过
+
+```bash
+cd Rocksi-master
+npm install
+npm run build
+```
+
+然后将打包后的内容复制到后端项目：
+
+```bash
+cp -r dist/build/* ../Astral3DEditorGoBack/static/rocksi/
+```
+
+---
+
+### 6. 浏览器访问
+
+打开浏览器访问：
+
+```
+http://localhost:3000/
+```
+
+你将看到前端页面通过 iframe 加载了后端提供的 `/rocksi/index.html` 页面。
+
+---
+
+## 🧩 项目结构说明
+
+```
+astral3d-editor-with-rocksi/
+├── Astral3DEditor/         # 前端（Vite + Vue3）
+│   ├── .env                # 配置 iframe 路径
+│   └── src/
+├── Astral3DEditorGoBack/   # 后端（Go + Beego）
+│   └── static/rocksi/      # 放置打包后的 Rocksi 页面
+├── Rocksi-master/          # Rocksi 前端项目源代码
+```
+
+---
+
+## 📦 打包部署（生产）
+
+1. 构建前端：
+
+   ```bash
+   cd Astral3DEditor
+   npm run build
+   ```
+
+2. 把 `dist/` 作为静态资源部署到服务器。
+
+3. 后端仍通过：
+
+   ```go
+   beego.BConfig.WebConfig.StaticDir["/rocksi"] = "static/rocksi"
+   ```
+
+   提供 iframe 内容。
+
+---
+
+## 📌 注意事项
+
+* `.env` 中不要使用 `http://127.0.0.1:8080` 等硬编码地址，应使用 `/rocksi/index.html` 相对路径，避免部署失败。
+* Rocksi 打包结果必须拷贝到 `static/rocksi/` 目录下。
+* WebSocket 地址建议用相对路径或配置为 `/api/sys/ws`。
+
+---
+
+是否还需要我生成 `.env.example` 和 `.gitignore` 模板？或生成中英文对照版本？你可以说“要中英版”，我来继续优化。
 
 ## 6. 项目结构
 
