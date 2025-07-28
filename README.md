@@ -45,9 +45,10 @@ sql::conn = astral:Astral@2025!@tcp(127.0.0.1:3306)/astral3d?charset=utf8mb4&par
 
 
 # 4. 安装依赖
-cd Astral3DEditor && npm install
-cd ../Rocksi-master && npm install && npm run build
-cp -r dist/build/* ../Astral3DEditorGoBack/static/rocksi/
+cd Astral3DEditor && npm install --legacy-peer-deps
+
+# cd ../Rocksi-master && npm install && npm run build
+# cp -r dist/build/* ../Astral3DEditorGoBack/static/rocksi/ 可忽略
 
 # 5. 启动后端
 cd ../Astral3DEditorGoBack
