@@ -33,7 +33,7 @@ Object3D.DefaultUp = new Vector3(0, 0, 1);
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import { TransformControls } from "three/examples/jsm/controls/TransformControls";
 
-var ResizeSensor = require("css-element-queries/src/ResizeSensor");
+import ResizeSensor from "css-element-queries/src/ResizeSensor";
 
 import { XacroLoader } from "xacro-parser";
 import URDFLoader from "urdf-loader";
@@ -45,27 +45,20 @@ import * as GUI from "./gui"
 import { popInfo } from "../alert"
 import { getDesiredRobot, canHover, isNarrowScreen } from "../helpers";
 
-const path = require('path');
+import path from 'path-browserify';
 
 const selectedRobot = getDesiredRobot();
-let robot;
+import franka from './robots/franka';
+import niryo from './robots/niryo';
+import sawyer from './robots/sawyer';
 
-switch (selectedRobot.toLowerCase()) {
-	case 'franka':
-		robot = require('./robots/franka');
-		break;
-
-	case 'niryo':
-		robot = require('./robots/niryo');
-		break;
-
-	case 'sawyer':
-		robot = require('./robots/sawyer');
-		break;
-
-	default:
-		throw ('Unknown robot \'' + selectedRobot + '\'');
-}
+let robotMap = {
+  franka,
+  niryo,
+  sawyer,
+};
+const robot = robotMap[selectedRobot.toLowerCase()];
+if (!robot) throw new Error(`Unknown robot '${selectedRobot}'`);
 
 let container;
 let camera, scene, renderer;

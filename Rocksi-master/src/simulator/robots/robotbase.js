@@ -1,6 +1,6 @@
 import { Object3D, Vector3, Quaternion, Euler, Bone } from "three";
 import { traverse } from "../utils"
-const path = require('path');
+import path from 'path-browserify';
 
 
 export const MODELS_ROOT = path.join(process.env.PUBLIC_URL || '', "/models/");

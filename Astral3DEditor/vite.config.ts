@@ -73,7 +73,19 @@ export default defineConfig(async ({ mode, command }) => {
           changeOrigin: true
         },
 
-        // 3) 如果有文件静态目录
+        // 3) Rocksi 模型目录
+        '/models': {
+          target: VITE_PROXY_URL,
+          changeOrigin: true
+        },
+
+        // 4) Rocksi 国际化文件目录
+        '/i18n': {
+          target: VITE_PROXY_URL,
+          changeOrigin: true
+        },
+
+        // 5) 文件静态目录（如果需要）
         '/file/static': {
           target: VITE_PROXY_URL,
           changeOrigin: true

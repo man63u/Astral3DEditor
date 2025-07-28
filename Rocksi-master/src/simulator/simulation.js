@@ -5,7 +5,8 @@ import { updatePhysics,
          isWorldActive,
          updateBodies, } from './physics'
 
-var TWEEN = require('@tweenjs/tween.js');
+import TWEEN from '@tweenjs/tween.js';
+
 
 import { isAttached,
          getAttachedObject,

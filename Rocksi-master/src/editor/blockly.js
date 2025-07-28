@@ -1,22 +1,24 @@
 import * as Blockly from 'blockly/core'
 
-// Setup the language early so the correct messages are loaded by later imports
+// ✅ 替代 require 的语言包和自定义翻译
+import BlocklyLangEN from 'blockly/msg/en';
+import BlocklyLangDE from 'blockly/msg/de';
+import { BlocklyCustomEN } from '../i18n/blockly_en.js';
+import { BlocklyCustomDE } from '../i18n/blockly_de.js';
+
+// ✅ 替代 require 的依赖
+import Interpreter from 'js-interpreter';
+import ResizeSensor from 'css-element-queries/src/ResizeSensor';
+
 import { getDesiredLanguage, localize } from '../helpers'
 
 const language = getDesiredLanguage();
-let BlocklyLang = null;
-let BlocklyLangCustom = null;
+let BlocklyLang = BlocklyLangEN;
+let BlocklyLangCustom = BlocklyCustomEN;
 
-switch (language) {
-    case 'de':
-        BlocklyLang = require('blockly/msg/de');
-        BlocklyLangCustom = require('../i18n/blockly_de').BlocklyCustomDE;
-        break;
-
-    case 'en':
-    default:
-        BlocklyLang = require('blockly/msg/en');
-        BlocklyLangCustom = require('../i18n/blockly_en').BlocklyCustomEN;
+if (language === 'de') {
+    BlocklyLang = BlocklyLangDE;
+    BlocklyLangCustom = BlocklyCustomDE;
 }
 
 Blockly.setLocale(BlocklyLang);
@@ -44,14 +46,14 @@ import { addSimObject,
 
 import { popSuccess, popWarning, popError, popInfo } from '../alert'
 
+// ✅ 下面这段原样保留
 const generator = Blockly.JavaScript;
 generator.STATEMENT_PREFIX = 'highlightBlock(%1);\n'
 generator.addReservedWords('highlightBlock');
 generator.addReservedWords('sendRobotCommand');
 generator.addReservedWords('code');
 
-var Interpreter = require('js-interpreter');
-var ResizeSensor = require('css-element-queries/src/ResizeSensor');
+
 
 import Simulation from '../simulator/simulation'
 import { disablePointerEvents, enablePointerEvents } from '../simulator/scene'

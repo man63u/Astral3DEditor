@@ -2,7 +2,7 @@ import * as THREE from 'three'
 import { Vector3, Mesh, CylinderGeometry, MeshStandardMaterial, Matrix4, AxesHelper, ArrowHelper } from "three"
 import { showPoints } from '../utils'
 
-var FIK = require("fullik")
+import FIK from 'fullik'
 // FIK uses its own namespace which is kindof dumb...
 Object.assign(window, { FIK });
 Object.assign(window, {THREE})

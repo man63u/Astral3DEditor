@@ -3,10 +3,9 @@
   "version": "1.0.0",
   "description": "Roboter Simulator für Webseiten",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "parcel ./index.html --out-dir dist/dev/",
-    "build-moodle": "cross-env PUBLIC_URL=/rocksi parcel build ./index.html --out-dir dist/build/ --public-url $PUBLIC_URL",
-    "build": "parcel build ./index.html --out-dir dist/build/ --public-url ./"
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
   },
   "author": "Nikolas Dahn",
   "license": "ISC",
@@ -23,6 +22,7 @@
     "lozad": "^1.16.0",
     "objects": "^0.3.0",
     "path": "^0.12.7",
+    "path-browserify": "^1.0.1",
     "split.js": "^1.6.2",
     "temp-dir": "^2.0.0",
     "three": "^0.129.0",
@@ -41,7 +41,9 @@
     "cssnano": "^4.1.10",
     "parcel-bundler": "1.12.5",
     "parcel-plugin-raw-xml": "^1.0.1",
-    "parcel-plugin-static-files-copy": "^2.5.0"
+    "parcel-plugin-static-files-copy": "^2.5.0",
+    "vite-plugin-commonjs": "^0.10.4",
+    "vite-plugin-string": "^1.2.3"
   },
   "staticFiles": {
     "staticPath": [

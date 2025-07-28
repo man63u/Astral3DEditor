@@ -33,9 +33,9 @@ func main() {
 	dist := filepath.Join("static", "rocksi")
 
 	beego.BConfig.WebConfig.StaticDir["/rocksi"] = dist
-	beego.BConfig.WebConfig.StaticDir["/models"] = filepath.Join(dist, "models")
+	beego.BConfig.WebConfig.StaticDir["/models"] = filepath.Join(dist, "assets", "models")
 	beego.BConfig.WebConfig.StaticDir["/i18n"] = filepath.Join(dist, "i18n")
-	beego.BConfig.WebConfig.StaticDir["/images"] = filepath.Join(dist, "images")
+	beego.BConfig.WebConfig.StaticDir["/images"] = filepath.Join(dist, "assets", "images")
 
 	if beego.BConfig.RunMode == "dev" {
 		beego.BConfig.WebConfig.DirectoryIndex = true
