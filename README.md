@@ -24,12 +24,25 @@
 git clone https://github.com/<your-name>/astral3d-editor-with-rocksi.git
 cd astral3d-editor-with-rocksi
 
-# 2. 初始化数据库
-mysql -uroot -p -e "CREATE DATABASE astral3d DEFAULT CHARSET utf8mb4;"
-mysql -uroot -p astral3d < static/sql/astral-3d-editor.sql
+
+# 2. 初始化数据库（创建库 + 用户）
+mysql -uroot -p -e "
+CREATE DATABASE astral3d DEFAULT CHARSET utf8mb4;
+CREATE USER 'astral'@'localhost' IDENTIFIED BY 'Astral@2025!';
+GRANT ALL PRIVILEGES ON astral3d.* TO 'astral'@'localhost';
+FLUSH PRIVILEGES;
+"
+
+# 导入表结构
+mysql -uastral -pAstral@2025! astral3d < static/sql/astral-3d-editor.sql
 
 # 3. 配置后端 (Astral3DEditorGoBack/conf/app.conf)
-sql::conn = root:123456@tcp(127.0.0.1:3306)/astral3d?charset=utf8mb4&parseTime=true&loc=Local
+# 默认推荐配置（与上面创建的用户一致）
+sql::conn = astral:Astral@2025!@tcp(127.0.0.1:3306)/astral3d?charset=utf8mb4&parseTime=true&loc=Local
+
+# 如果你使用 root 用户或自定义密码，请改成：
+# sql::conn = root:你的密码@tcp(127.0.0.1:3306)/astral3d?charset=utf8mb4&parseTime=true&loc=Local
+
 
 # 4. 安装依赖
 cd Astral3DEditor && npm install
