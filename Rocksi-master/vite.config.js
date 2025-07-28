@@ -10,6 +10,10 @@ export default defineConfig({
       include: ['**/*.xml']
     })
   ],
+  define: {
+  'process.env': {},
+}
+, // 👈 确保 process.env 在代码中可用
   build: {
     outDir: 'dist/build',
     assetsDir: 'assets',

@@ -36,8 +36,7 @@ export default defineConfig(async ({ mode, command }) => {
     root,
     plugins,
     define: {
-      // 一般不需要把整个 process.env 注入，慎用；若某些第三方库需要可保留
-      'process.env': process.env
+      'process.env': {},
     },
     resolve: {
       alias: {

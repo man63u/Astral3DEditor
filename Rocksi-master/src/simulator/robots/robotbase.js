@@ -3,7 +3,9 @@ import { traverse } from "../utils"
 import path from 'path-browserify';
 
 
-export const MODELS_ROOT = path.join(process.env.PUBLIC_URL || '', "/models/");
+const PUBLIC_URL = (typeof process !== "undefined" && process.env?.PUBLIC_URL) || import.meta.env.BASE_URL || "";
+export const MODELS_ROOT = path.join(PUBLIC_URL, "models/");
+
 export const getPackage = (name) => path.join(MODELS_ROOT, name);
 
 
