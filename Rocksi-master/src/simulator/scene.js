@@ -9,6 +9,8 @@ import {
     PolarGridHelper,
     HemisphereLight,
     PointLight,
+    SpotLight,
+    DirectionalLight,
     Mesh,
     SphereGeometry,
     Color,
@@ -22,7 +24,7 @@ import {
 } from "three";
 
 //Imports for managing objects and physics
-import { initCannon } from './physics';
+import { initCannon, getWorld, addBodyToWorld } from './physics';
 
 import { remControledSimObject, setSimObjectHighlight,
          setTCSimObjectsOnClick } from './objects/createObjects';
@@ -33,7 +35,7 @@ Object3D.DefaultUp = new Vector3(0, 0, 1);
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import { TransformControls } from "three/examples/jsm/controls/TransformControls";
 
-import ResizeSensor from "css-element-queries/src/ResizeSensor";
+var ResizeSensor = require("css-element-queries/src/ResizeSensor");
 
 import { XacroLoader } from "xacro-parser";
 import URDFLoader from "urdf-loader";
@@ -45,20 +47,39 @@ import * as GUI from "./gui"
 import { popInfo } from "../alert"
 import { getDesiredRobot, canHover, isNarrowScreen } from "../helpers";
 
-import path from 'path-browserify';
+const path = require('path');
 
 const selectedRobot = getDesiredRobot();
-import franka from './robots/franka';
-import niryo from './robots/niryo';
-import sawyer from './robots/sawyer';
+let robot;
 
-let robotMap = {
-  franka,
-  niryo,
-  sawyer,
-};
-const robot = robotMap[selectedRobot.toLowerCase()];
-if (!robot) throw new Error(`Unknown robot '${selectedRobot}'`);
+switch (selectedRobot.toLowerCase()) {
+	case 'franka':
+	case 'franka_description':
+		robot = require('./robots/franka');
+		break;
+
+	case 'niryo':
+	case 'niryo_robot_description':
+		robot = require('./robots/niryo');
+		break;
+
+	case 'sawyer':
+	case 'sawyer_description':
+		robot = require('./robots/sawyer');
+		break;
+
+	case 'unitree_go2':
+	case 'go2_description_humble':
+		robot = require('./robots/go2');
+		break;
+
+	case 'g1_description':
+		robot = require('./robots/g1');
+		break;
+
+	default:
+		throw ('Unknown robot \'' + selectedRobot + '\'');
+}
 
 let container;
 let camera, scene, renderer;
@@ -74,23 +95,80 @@ let ik;
 
 const renderCallbacks = [];
 
+console.log('Robot xacro path:', robot.xacro);
+console.log('Robot xacro type:', typeof robot.xacro);
+console.log('Robot xacro value:', robot.xacro);
+
+// 添加安全检查
+if (!robot.xacro) {
+	console.error('Robot xacro is undefined or null');
+	console.error('Robot object:', robot);
+	console.error('Robot name:', robot.name);
+	console.error('Robot package:', robot._package);
+	console.error('Robot xacro file:', robot._xacro);
+}
+
 loadRobotModel(robot.xacro)
 	.then(model => {
+		console.log('Robot model loaded successfully:', model);
 		robot.init(model);
-		$('.robot-info').on('click', evt => popInfo(robot.info.DE))
+		console.log('Robot initialized:', robot);
+		
+		if (robot.info && robot.info.DE) {
+			$('.robot-info').on('click', evt => popInfo(robot.info.DE))
+		}
 		robot.setPose(robot.defaultPose);
+		
+		// 设置机器人初始位置，让脚部接触地面
+		if (robot.initialPosition) {
+			console.log('Setting robot initial position:', robot.initialPosition);
+			// 设置整个机器人模型的位置
+			if (robot.model) {
+				robot.model.position.set(robot.initialPosition[0], robot.initialPosition[1], robot.initialPosition[2]);
+				console.log('Robot model position set to:', robot.model.position);
+			}
+			// 也设置根链接的位置
+			const rootLink = robot.model.links[robot.robotRoot];
+			if (rootLink) {
+				rootLink.position.set(robot.initialPosition[0], robot.initialPosition[1], robot.initialPosition[2]);
+				console.log('Root link position set to:', rootLink.position);
+			}
+		}
 
 		initScene();
         initCannon();
+        
+        // 如果机器人启用了物理引擎，初始化物理体
+        if (robot.enablePhysics) {
+            console.log('Initializing physics for robot:', robot.name);
+            initRobotPhysics(robot);
+        }
 
 		ik = new IKSolver(scene, robot);
 		Simulation.init(robot, ik, ikRender);
+		
+		// 延迟初始化GUI，确保机器人完全加载
+		setTimeout(() => {
+			GUI.initGui(robot, cameraControl, ikRender);
+		}, 100);
+		
+		// 确保加载动画被隐藏
+		$('.loading-lightbox').hide();
 	}, reason => {
-		console.error(reason);
+		console.error('Failed to load robot model:', reason);
 	});
 
 
 function loadRobotModel(url) {
+	console.log('Loading robot model from:', url);
+	
+	// 添加安全检查
+	if (!url || typeof url !== 'string') {
+		const error = new Error(`Invalid URL: ${url}`);
+		console.error('Invalid robot xacro URL:', url);
+		return Promise.reject(error);
+	}
+	
 	return new Promise((resolve, reject) => {
 		const xacroLoader = new XacroLoader();
 		xacroLoader.inOrder = true;
@@ -98,7 +176,9 @@ function loadRobotModel(url) {
 		xacroLoader.localProperties = true;
 
 		xacroLoader.rospackCommands.find = (...args) => {
-			return path.join(robot.root, ...args);
+			const result = path.join(robot.root, ...args);
+			console.log('rospack find:', args, '->', result);
+			return result;
 		}
 
 		for (let cmd in robot.rosMacros) {
@@ -108,16 +188,39 @@ function loadRobotModel(url) {
 		xacroLoader.load(
 			url,
 			(xml) => {
-				let manager = new LoadingManager(onLoadComplete, render);
+				console.log('Xacro loaded successfully, parsing URDF...');
+				let manager = new LoadingManager(onLoadComplete, () => {
+					// 安全的渲染回调
+					if (typeof render === 'function' && renderer) {
+						render();
+					}
+				});
 				const urdfLoader = new URDFLoader(manager);
 				urdfLoader.packages = robot.packages;
-				urdfLoader.workingPath = LoaderUtils.extractUrlBase(url);
+				// 安全地处理URL路径
+				let workingPath = './';
+				if (url && typeof url === 'string') {
+					try {
+						workingPath = LoaderUtils.extractUrlBase(url);
+					} catch (error) {
+						console.warn('Failed to extract URL base, using default:', error);
+						workingPath = './';
+					}
+				}
+				urdfLoader.workingPath = workingPath;
 
 				let model = urdfLoader.parse(xml);
+				console.log('URDF parsed successfully:', model);
+				
+				// 手动触发加载完成回调
+				setTimeout(() => {
+					onLoadComplete();
+				}, 100);
+				
 				resolve(model);
 			},
 			(error) => {
-				console.error(error);
+				console.error('Xacro loading failed:', error);
 				reject(error);
 			}
 		);
@@ -127,6 +230,19 @@ function loadRobotModel(url) {
 function onLoadComplete() {
 	$('.loading-lightbox').hide();
 	robot.onLoadComplete();
+	
+	// 为Go2机器人设置正确的地面位置
+	if (robot.name === 'Go2' && robot.initialPosition) {
+		console.log('Setting Go2 robot position to ground level');
+		if (robot.model && robot.model.position) {
+			robot.model.position.set(
+				robot.initialPosition[0],
+				robot.initialPosition[1], 
+				robot.initialPosition[2]
+			);
+			console.log('Go2 robot positioned at:', robot.model.position);
+		}
+	}
 }
 
 
@@ -170,12 +286,17 @@ function initScene() {
 	const light = new HemisphereLight(0xffeeee, 0x111122);
 	scene.add(light);
 
-	const pointLight = new PointLight(0xffffff, 0.3);
-	//pointLight.castShadow = true;
-	//particleLight.add(pointLight);
-	//particleLight.position.set(30, 40, 30);
+	const pointLight = new PointLight(0xffffff, 0.5);
 	pointLight.position.set(30, 30, 40);
 	scene.add(pointLight);
+
+	// 为Go2机器人添加更好的光照
+	if (robot.name === 'Go2') {
+		// 添加填充光
+		const fillLight = new DirectionalLight(0x404040, 0.3);
+		fillLight.position.set(-10, 10, 10);
+		scene.add(fillLight);
+	}
 
 	renderer = new WebGLRenderer();
 	renderer.sortObjects = false;
@@ -227,7 +348,8 @@ function initScene() {
 	new ResizeSensor(domParent, onCanvasResize);
 	onCanvasResize();
 
-	GUI.initGui(robot, cameraControl, ikRender);
+	// 启动TWEEN动画循环
+	startTweenLoop();
 }
 
 function onCanvasResize() {
@@ -278,11 +400,31 @@ function updateGroundLine() {
 }
 
 function render() {
-    renderer.render(scene, camera);
+    if (renderer && scene && camera) {
+        renderer.render(scene, camera);
+    }
 
 	for (let cb of renderCallbacks) {
 		cb(robot);
 	}
+}
+
+// 添加持续的TWEEN更新循环
+function startTweenLoop() {
+    var TWEEN = require('@tweenjs/tween.js');
+    
+    function animateTween(time) {
+        TWEEN.update(time);
+        
+        // 强制渲染场景以显示动画
+        if (renderer && scene && camera) {
+            renderer.render(scene, camera);
+        }
+        
+        requestAnimationFrame(animateTween);
+    }
+    
+    requestAnimationFrame(animateTween);
 }
 
 export function enablePointerEvents() {
@@ -420,3 +562,87 @@ export function getControl () {
     }
     return contObj;
 }
+
+// 初始化机器人物理引擎
+function initRobotPhysics(robot) {
+    console.log('Initializing robot physics for:', robot.name);
+    
+    const world = getWorld();
+    if (!world) {
+        console.error('Physics world not initialized');
+        return;
+    }
+    
+    // 为机器人的每个链接创建物理体
+    for (const linkName in robot.model.links) {
+        const link = robot.model.links[linkName];
+        if (link && link.geometry) {
+            // 创建物理体
+            const body = createPhysicsBodyForLink(link, robot);
+            if (body) {
+                // 设置物理体的初始位置
+                if (robot.initialPosition) {
+                    body.position.set(robot.initialPosition[0], robot.initialPosition[1], robot.initialPosition[2]);
+                }
+                // 将物理体添加到世界
+                world.addBody(body);
+                console.log('Added physics body for link:', linkName, 'at position:', body.position);
+            }
+        }
+    }
+    
+    // 启动物理模拟
+    startPhysicsSimulation();
+}
+
+// 启动物理模拟
+function startPhysicsSimulation() {
+    console.log('Starting physics simulation...');
+    
+    // 添加物理模拟更新到渲染循环
+    const updatePhysics = () => {
+        const world = getWorld();
+        if (world) {
+            world.step(1/60); // 60 FPS物理更新
+        }
+        requestAnimationFrame(updatePhysics);
+    };
+    
+    updatePhysics();
+}
+
+// 为链接创建物理体
+function createPhysicsBodyForLink(link, robot) {
+    const CANNON = require('cannon-es');
+    
+    // 根据几何体类型创建物理体
+    if (link.geometry.type === 'BoxGeometry') {
+        const size = link.geometry.parameters;
+        const shape = new CANNON.Box(new CANNON.Vec3(size.width/2, size.height/2, size.depth/2));
+        const body = new CANNON.Body({ mass: 1 });
+        body.addShape(shape);
+        body.position.copy(link.position);
+        return body;
+    }
+    else if (link.geometry.type === 'CylinderGeometry') {
+        const params = link.geometry.parameters;
+        const shape = new CANNON.Cylinder(params.radiusTop, params.radiusBottom, params.height, params.radialSegments);
+        const body = new CANNON.Body({ mass: 1 });
+        body.addShape(shape);
+        body.position.copy(link.position);
+        return body;
+    }
+    else if (link.geometry.type === 'SphereGeometry') {
+        const params = link.geometry.parameters;
+        const shape = new CANNON.Sphere(params.radius);
+        const body = new CANNON.Body({ mass: 1 });
+        body.addShape(shape);
+        body.position.copy(link.position);
+        return body;
+    }
+    
+    return null;
+}
+
+
+

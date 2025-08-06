@@ -46,6 +46,21 @@ Blockly.Blocks["wait"] = {
 	},
 };
 
+Blockly.Blocks["suspend"] = {
+	init: function () {
+		this.jsonInit({
+			type: "suspend",
+			message0: "%{BKY_ROCKSI_BLOCK_SUSPEND}",  // 多语言键
+			args0: [],
+			previousStatement: null,
+			nextStatement: null,
+			style: 'extras_blocks',
+			tooltip: "%{BKY_ROCKSI_BLOCK_SUSPEND_TOOLTIP}",
+			helpUrl: "",
+		});
+	}
+};
+
 Blockly.Blocks["set_speed"] = {
 	init: function () {
 		this.jsonInit({

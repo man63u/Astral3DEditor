@@ -1,4 +1,5 @@
-import Robot from './robotbase';
+import Robot from './robotbase'
+
 
 class Franka extends Robot {
 	constructor() {
@@ -36,5 +37,4 @@ class Franka extends Robot {
 	}
 }
 
-const franka = new Franka();
-export default franka;
+module.exports = new Franka();

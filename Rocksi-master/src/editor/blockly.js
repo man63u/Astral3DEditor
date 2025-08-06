@@ -1,24 +1,22 @@
 import * as Blockly from 'blockly/core'
 
-// ✅ 替代 require 的语言包和自定义翻译
-import BlocklyLangEN from 'blockly/msg/en';
-import BlocklyLangDE from 'blockly/msg/de';
-import { BlocklyCustomEN } from '../i18n/blockly_en.js';
-import { BlocklyCustomDE } from '../i18n/blockly_de.js';
-
-// ✅ 替代 require 的依赖
-import Interpreter from 'js-interpreter';
-import ResizeSensor from 'css-element-queries/src/ResizeSensor';
-
+// Setup the language early so the correct messages are loaded by later imports
 import { getDesiredLanguage, localize } from '../helpers'
 
 const language = getDesiredLanguage();
-let BlocklyLang = BlocklyLangEN;
-let BlocklyLangCustom = BlocklyCustomEN;
+let BlocklyLang = null;
+let BlocklyLangCustom = null;
 
-if (language === 'de') {
-    BlocklyLang = BlocklyLangDE;
-    BlocklyLangCustom = BlocklyCustomDE;
+switch (language) {
+    case 'de':
+        BlocklyLang = require('blockly/msg/de');
+        BlocklyLangCustom = require('../i18n/blockly_de').BlocklyCustomDE;
+        break;
+
+    case 'en':
+    default:
+        BlocklyLang = require('blockly/msg/en');
+        BlocklyLangCustom = require('../i18n/blockly_en').BlocklyCustomEN;
 }
 
 Blockly.setLocale(BlocklyLang);
@@ -33,6 +31,7 @@ import './blocks/helpers'
 import './blocks/movement'
 import './blocks/objects'
 import './blocks/extras'
+import './blocks/go2_movement'
 import './generators/javascript'
 
 // Toolbox XML is imported for parcel
@@ -46,14 +45,14 @@ import { addSimObject,
 
 import { popSuccess, popWarning, popError, popInfo } from '../alert'
 
-// ✅ 下面这段原样保留
 const generator = Blockly.JavaScript;
 generator.STATEMENT_PREFIX = 'highlightBlock(%1);\n'
 generator.addReservedWords('highlightBlock');
 generator.addReservedWords('sendRobotCommand');
 generator.addReservedWords('code');
 
-
+var Interpreter = require('js-interpreter');
+var ResizeSensor = require('css-element-queries/src/ResizeSensor');
 
 import Simulation from '../simulator/simulation'
 import { disablePointerEvents, enablePointerEvents } from '../simulator/scene'
@@ -331,6 +330,20 @@ function simulationAPI(interpreter, globalObject) {
     }
     interpreter.setProperty(globalObject, 'robot',
         interpreter.createNativeFunction(wrapper));
+    
+    // ✅ 新增 suspend 支持
+    const simObj = interpreter.createObjectProto(interpreter.OBJECT);
+    const simInstance = interpreter.createObjectProto(interpreter.OBJECT);
+
+    // 注册 Simulation.instance.suspend
+    interpreter.setProperty(simInstance, 'suspend',
+        interpreter.createNativeFunction(() => {
+            simulation.suspend();  // 直接使用上面 getInstance() 拿到的 simulation 实例
+        })
+    );
+
+    interpreter.setProperty(simObj, 'instance', simInstance);
+    interpreter.setProperty(globalObject, 'Simulation', simObj);
 }
 
 

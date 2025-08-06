@@ -6,7 +6,7 @@ import { localize } from "../helpers";
 import { msgBoxInfo } from "../alert";
 
 
-const theRobots = ['Franka', 'Niryo', 'Sawyer'];
+const theRobots = ['Franka', 'Niryo', 'Sawyer', 'Go2', 'G1'];
 let currentRobotIdx = 0;
 {
     let currentRobot = getDesiredRobot().toLowerCase();
@@ -81,6 +81,12 @@ export function initGui(robot, cameraControl, renderCall) {
     //                                 val => { robot.useAdvancedGripping = val; } 
     //                             );
     
+    // 添加安全检查，确保robot和arm.movable已经初始化
+    if (!robot || !robot.arm || !robot.arm.movable) {
+        console.warn('Robot not fully initialized, skipping joint GUI initialization');
+        return;
+    }
+    
     let jointValuesRelative = getRobotJointValuesRelative(robot);
     jointList = gui.add('graph', 
                         { name: localize('gui-joints'), 
@@ -151,9 +157,16 @@ function onRobotMoved(robot) {
 function getRobotJointValuesRelative(robot) {
     let values = [];
     for (let joint of robot.arm.movable) {
-        let angle = joint.angle;
-        let lower = joint.limit.lower;
-        let upper = joint.limit.upper;
+        // 添加安全检查
+        if (!joint || !joint.limit) {
+            console.warn('Joint missing limit data:', joint);
+            values.push(0);
+            continue;
+        }
+        
+        let angle = joint.angle || 0;
+        let lower = joint.limit.lower || -Math.PI;
+        let upper = joint.limit.upper || Math.PI;
         let rel = (angle - lower) / (upper - lower) * 2 - 1.0;
         values.push(rel);
     }
@@ -250,3 +263,6 @@ function resetRobot(robot, renderCallback) {
     }
     renderCallback();
 }
+
+
+

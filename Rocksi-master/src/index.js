@@ -226,6 +226,21 @@ window.onbeforeunload = function() {
     return localize('warn-unsaved');
 }
 
+// ========== Robot Selector Logic ========== //
+$(document).ready(() => {
+    const selector = $('#robotSelect');
+    if (!selector.length) return;
+
+    const params = new URLSearchParams(window.location.search);
+    const current = params.get('robot') || 'franka';
+    selector.val(current);
+
+    selector.on('change', () => {
+        params.set('robot', selector.val());
+        window.location.search = params.toString(); // reload page
+    });
+});
+
 
 // Hide our URL hint if we are not inside an iframe
 try { 
@@ -244,4 +259,3 @@ import 'blockly'
 import './blockly_fixes'
 import './simulator/scene'
 import './editor/blockly'
-

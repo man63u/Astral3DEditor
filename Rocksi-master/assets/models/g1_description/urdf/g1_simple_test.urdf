@@ -1,0 +1,116 @@
+<robot name="g1_simple_test">
+  <link name="world"/>
+  
+  <link name="pelvis">
+    <visual>
+      <geometry>
+        <box size="0.2 0.1 0.15"/>
+      </geometry>
+      <material name="dark">
+        <color rgba="0.2 0.2 0.2 1"/>
+      </material>
+    </visual>
+    <collision>
+      <geometry>
+        <box size="0.2 0.1 0.15"/>
+      </geometry>
+    </collision>
+  </link>
+  
+  <joint name="floating_base_joint" type="floating">
+    <parent link="world"/>
+    <child link="pelvis"/>
+  </joint>
+  
+  <link name="torso_link">
+    <visual>
+      <geometry>
+        <box size="0.15 0.1 0.3"/>
+      </geometry>
+      <material name="dark">
+        <color rgba="0.2 0.2 0.2 1"/>
+      </material>
+    </visual>
+    <collision>
+      <geometry>
+        <box size="0.15 0.1 0.3"/>
+      </geometry>
+    </collision>
+  </link>
+  
+  <joint name="torso_joint" type="fixed">
+    <parent link="pelvis"/>
+    <child link="torso_link"/>
+  </joint>
+  
+  <link name="head_link">
+    <visual>
+      <geometry>
+        <sphere radius="0.1"/>
+      </geometry>
+      <material name="dark">
+        <color rgba="0.2 0.2 0.2 1"/>
+      </material>
+    </visual>
+    <collision>
+      <geometry>
+        <sphere radius="0.1"/>
+      </geometry>
+    </collision>
+  </link>
+  
+  <joint name="head_joint" type="fixed">
+    <origin xyz="0 0 0.2" rpy="0 0 0"/>
+    <parent link="torso_link"/>
+    <child link="head_link"/>
+  </joint>
+  
+  <link name="left_arm_link">
+    <visual>
+      <geometry>
+        <cylinder radius="0.03" length="0.3"/>
+      </geometry>
+      <material name="white">
+        <color rgba="0.7 0.7 0.7 1"/>
+      </material>
+    </visual>
+    <collision>
+      <geometry>
+        <cylinder radius="0.03" length="0.3"/>
+      </geometry>
+    </collision>
+  </link>
+  
+  <joint name="left_shoulder_joint" type="revolute">
+    <origin xyz="0.1 0 0.15" rpy="0 0 0"/>
+    <parent link="torso_link"/>
+    <child link="left_arm_link"/>
+    <axis xyz="0 1 0"/>
+    <limit lower="-3.14159" upper="3.14159" effort="88" velocity="32"/>
+  </joint>
+  
+  <link name="right_arm_link">
+    <visual>
+      <geometry>
+        <cylinder radius="0.03" length="0.3"/>
+      </geometry>
+      <material name="white">
+        <color rgba="0.7 0.7 0.7 1"/>
+      </material>
+    </visual>
+    <collision>
+      <geometry>
+        <cylinder radius="0.03" length="0.3"/>
+      </geometry>
+    </collision>
+  </link>
+  
+  <joint name="right_shoulder_joint" type="revolute">
+    <origin xyz="-0.1 0 0.15" rpy="0 0 0"/>
+    <parent link="torso_link"/>
+    <child link="right_arm_link"/>
+    <axis xyz="0 1 0"/>
+    <limit lower="-3.14159" upper="3.14159" effort="88" velocity="32"/>
+  </joint>
+  
+</robot> 

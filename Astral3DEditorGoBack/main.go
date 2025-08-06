@@ -19,7 +19,8 @@ func init() {
 		logs.Error(err1.Error())
 	}
 
-	var sqlConn, _ = beego.AppConfig.String("sql::conn")
+	// 直接使用硬编码的连接字符串进行测试
+	sqlConn := "astral:Astral@2025!@tcp(127.0.0.1:3306)/astral3d_dev?charset=utf8mb4&parseTime=true&loc=Local"
 	if err2 := orm.RegisterDataBase("default", "mysql", sqlConn); err2 != nil {
 		logs.Error(err2.Error())
 		panic(err2.Error())

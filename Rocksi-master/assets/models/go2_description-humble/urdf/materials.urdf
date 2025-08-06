@@ -1,0 +1,51 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="go2_materials">
+
+  <!-- 材质定义 -->
+  <material name="go2_black">
+    <color rgba="0.1 0.1 0.1 1"/>
+    <texture filename="package://go2_description-humble/textures/black.png"/>
+  </material>
+
+  <material name="go2_white">
+    <color rgba="0.9 0.9 0.9 1"/>
+    <texture filename="package://go2_description-humble/textures/white.png"/>
+  </material>
+
+  <material name="go2_blue">
+    <color rgba="0.2 0.4 0.8 1"/>
+    <texture filename="package://go2_description-humble/textures/blue.png"/>
+  </material>
+
+  <material name="go2_gray">
+    <color rgba="0.6 0.6 0.6 1"/>
+    <texture filename="package://go2_description-humble/textures/gray.png"/>
+  </material>
+
+  <material name="go2_dark_gray">
+    <color rgba="0.3 0.3 0.3 1"/>
+    <texture filename="package://go2_description-humble/textures/dark_gray.png"/>
+  </material>
+
+  <material name="go2_metal">
+    <color rgba="0.7 0.7 0.8 1"/>
+    <texture filename="package://go2_description-humble/textures/metal.png"/>
+  </material>
+
+  <!-- 发光材质 -->
+  <material name="go2_led_blue">
+    <color rgba="0.0 0.5 1.0 1"/>
+    <texture filename="package://go2_description-humble/textures/led_blue.png"/>
+  </material>
+
+  <material name="go2_led_green">
+    <color rgba="0.0 1.0 0.0 1"/>
+    <texture filename="package://go2_description-humble/textures/led_green.png"/>
+  </material>
+
+  <material name="go2_led_red">
+    <color rgba="1.0 0.0 0.0 1"/>
+    <texture filename="package://go2_description-humble/textures/led_red.png"/>
+  </material>
+
+</robot>

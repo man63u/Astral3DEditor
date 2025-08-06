@@ -1,11 +1,9 @@
 import { Object3D, Vector3, Quaternion, Euler, Bone } from "three";
 import { traverse } from "../utils"
-import path from 'path-browserify';
+const path = require('path');
 
 
-const PUBLIC_URL = (typeof process !== "undefined" && process.env?.PUBLIC_URL) || import.meta.env.BASE_URL || "";
-export const MODELS_ROOT = path.join(PUBLIC_URL, "models/");
-
+export const MODELS_ROOT = path.join(process.env.PUBLIC_URL || '', "/models/");
 export const getPackage = (name) => path.join(MODELS_ROOT, name);
 
 
@@ -69,7 +67,7 @@ export default class Robot {
             // joint_1: -0.11,
         },
         
-        // Location of the handle used for moving the robot
+        // Location of the handle used for Moving the robot
         this.tcp = {
             parent: "",
             // Distance and euler angles from hand origin to finger tip
@@ -78,7 +76,7 @@ export default class Robot {
             object: new Object3D(),  // Filled by init()
         };
     
-        // Joint names that the robot is allowed to use for moving
+        // Joint names that the robot is allowed to use for Moving
         this.ikEnabled = [
             // "joint_1", "joint_2", ...
         ];

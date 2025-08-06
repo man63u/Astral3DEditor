@@ -1,4 +1,5 @@
-import { PointsMaterial, BufferGeometry, Points, Float32BufferAttribute, Vector3, ArrowHelper } from "three";
+import { PointsMaterial, Geometry, Points } from "three";
+
 
 // A version of traverse that will stop a branch when the callback returns "true"
 function traverse(obj, cb, descendants = "children") {
@@ -14,30 +15,27 @@ function traverse(obj, cb, descendants = "children") {
 	}
 }
 
+
 function showPoints(scene, positions, color = null) {
 	let material = new PointsMaterial({
-		size: 10,
-		color: color !== null ? color : 0x00ff00,
-		sizeAttenuation: false,
-		depthTest: false,
-		depthWrite: true,
-	});
+			size: 10,
+			color: color !== null ? color : 0x00ff00,
+			sizeAttenuation: false,
+			depthTest: false,
+            depthWrite: true,
+		});
+	let geom = new Geometry();
 
-	const positionsArray = new Float32Array(positions.length * 3);
-	positions.forEach((p, i) => {
-		positionsArray[i * 3 + 0] = p.x;
-		positionsArray[i * 3 + 1] = p.y;
-		positionsArray[i * 3 + 2] = p.z;
-	});
-	const geom = new BufferGeometry();
-	geom.setAttribute('position', new Float32BufferAttribute(positionsArray, 3));
+	for (let p of positions) {
+		geom.vertices.push(p);
+	}
 
-	var dots = new Points(geom, material);
-	dots.layers.toggle(31)
+    var dots = new Points(geom, material);
+    dots.layers.toggle(31)
 	scene.add(dots);
 }
 
-function showAxes(objects) {
+function showAxes(objects) {	
 	for (const o of objects) {
 		let color = 0xff0000;
 		for (const c of ['x', 'y', 'z']) {
@@ -48,6 +46,7 @@ function showAxes(objects) {
 			color = color >>> 8;
 		}
 	}
+
 }
 
 /*
@@ -57,4 +56,5 @@ function signedAngleDifference(a1, a2) {
 	return (a1 - a2 + 3 * Math.PI) % (2 * Math.PI) - Math.PI;
 }
 
-export { traverse, showPoints, showAxes, signedAngleDifference };
+
+export { traverse, showPoints, showAxes, signedAngleDifference }

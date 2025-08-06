@@ -1,5 +1,6 @@
-import Robot from './robotbase';
-import NiryoGenerator from '../../editor/generators/niryo_v3';
+import Robot from './robotbase'
+import NiryoGenerator from '../../editor/generators/niryo_v3'
+
 
 class Niryo extends Robot {
 	constructor() {
@@ -35,5 +36,5 @@ class Niryo extends Robot {
 	}
 }
 
-const niryo = new Niryo();
-export default niryo;
+
+module.exports = new Niryo();

@@ -109,6 +109,10 @@ Blockly.JavaScript["wait"] = function (block) {
 	return 'robot("wait", ' + (time * 1000) + ');\n';
 };
 
+Blockly.JavaScript["suspend"] = function (block) {
+    return 'Simulation.instance.suspend();\n';
+};
+
 Blockly.JavaScript["set_speed"] = function (block) {
 	var motion = block.getFieldValue('MOTION_TYPE');
 	var speed = block.getFieldValue('SPEED');
@@ -127,4 +131,53 @@ Blockly.JavaScript["joint_unlock"] = function (block) {
 	var joint = block.getFieldValue('JOINT');
 	var code = 'robot("unlockJoint", ' + joint + ');\n';
 	return code;
+};
+
+/* ===========
+ * GO2 ROBOT
+ * =========== */
+
+// Go2机器狗行走
+Blockly.JavaScript["go2_walk"] = function (block) {
+    let direction = block.getFieldValue('DIRECTION');
+    let speed = Blockly.JavaScript.valueToCode(block, 'SPEED', Blockly.JavaScript.ORDER_COMMA) || 0.5;
+    let duration = Blockly.JavaScript.valueToCode(block, 'DURATION', Blockly.JavaScript.ORDER_COMMA) || 1.0;
+    
+    let code = 'robot("go2_walk", "' + direction + '", ' + speed + ', ' + duration + ');\n';
+    return code;
+};
+
+// Go2机器狗姿态
+Blockly.JavaScript["go2_pose"] = function (block) {
+    let poseType = block.getFieldValue('POSE_TYPE');
+    
+    let code = 'robot("go2_pose", "' + poseType + '");\n';
+    return code;
+};
+
+// Go2机器狗腿部控制
+Blockly.JavaScript["go2_leg_control"] = function (block) {
+    let leg = block.getFieldValue('LEG');
+    let hipAngle = Blockly.JavaScript.valueToCode(block, 'HIP_ANGLE', Blockly.JavaScript.ORDER_COMMA) || 0;
+    let thighAngle = Blockly.JavaScript.valueToCode(block, 'THIGH_ANGLE', Blockly.JavaScript.ORDER_COMMA) || 1.8;
+    let calfAngle = Blockly.JavaScript.valueToCode(block, 'CALF_ANGLE', Blockly.JavaScript.ORDER_COMMA) || -1.8;
+    
+    let code = 'robot("go2_leg_control", "' + leg + '", ' + hipAngle + ', ' + thighAngle + ', ' + calfAngle + ');\n';
+    return code;
+};
+
+// Go2机器狗物理引擎控制
+Blockly.JavaScript["go2_physics"] = function (block) {
+    let action = block.getFieldValue('PHYSICS_ACTION');
+    
+    let code = 'robot("go2_physics", "' + action + '");\n';
+    return code;
+};
+
+// Go2机器狗传感器
+Blockly.JavaScript["go2_sensor"] = function (block) {
+    let sensorType = block.getFieldValue('SENSOR_TYPE');
+    
+    let code = 'robot("go2_sensor", "' + sensorType + '")';
+    return [code, Blockly.JavaScript.ORDER_ATOMIC];
 };

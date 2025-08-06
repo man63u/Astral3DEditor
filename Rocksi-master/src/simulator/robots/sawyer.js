@@ -57,5 +57,4 @@ class Sawyer extends Robot {
 	}
 }
 
-const sawyer = new Sawyer();
-export default sawyer;
+module.exports = new Sawyer();

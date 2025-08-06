@@ -63,6 +63,8 @@ export const BlocklyCustomDE = {
     ROCKSI_BLOCK_COMMENT_TOOLTIP: "Kommentar, hat keine Auswirkungen",
     ROCKSI_BLOCK_WAIT: "Warte %1 Sekunden",
     ROCKSI_BLOCK_WAIT_TOOLTIP: "Warte eine bestimmte Zeit, bevor der nächste Block ausgeführt wird",
+    BKY_ROCKSI_BLOCK_SUSPEND: "Programm anhalten",
+    BKY_ROCKSI_BLOCK_SUSPEND_TOOLTIP: "Programm vorübergehend pausieren",
     ROCKSI_BLOCK_SETSPEED: "Geschwindigkeit %1 %2 %%",
     ROCKSI_BLOCK_SETSPEED_MOVE: "Bewegung",
     ROCKSI_BLOCK_SETSPEED_GRIPPER: "Greifer",

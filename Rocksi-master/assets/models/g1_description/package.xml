@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>g1_description</name>
+  <version>1.0.0</version>
+  <description>g1_description contains URDF files and meshes of Unitree G1 humanoid robot</description>
+  <maintainer email="support@unitree.com">Unitree Robotics</maintainer>
+  <license>Apache 2.0</license>
+
+  <url type="website">https://www.unitree.com/products/g1</url>
+  <url type="repository">https://github.com/unitreerobotics/g1_description</url>
+  <url type="bugtracker">https://github.com/unitreerobotics/g1_description/issues</url>
+  <author>Unitree Robotics</author>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <exec_depend>xacro</exec_depend>
+  <exec_depend>urdf</exec_depend>
+</package> 
