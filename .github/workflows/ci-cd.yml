@@ -1,12 +1,12 @@
  name: CI/CD Pipeline
 
-on:
+ on:
   push:
     branches: [ main, develop ]
   pull_request:
     branches: [ main ]
 
-env:
+ env:
   # 数据库配置 - 使用GitHub Secrets
   DB_HOST: localhost
   DB_PORT: 3306
@@ -22,7 +22,7 @@ env:
   BACKEND_PORT: 8080
   FRONTEND_PORT: 3000
 
-jobs:
+ jobs:
   # 代码质量检查
   code-quality:
     name: Code Quality Check
